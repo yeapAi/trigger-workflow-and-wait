@@ -110,12 +110,10 @@ api() {
 get_workflow_runs() {
   since=${1:?}
 
-  query="event=workflow_dispatch&created=>=$since${INPUT_GITHUB_USER+&actor=}${INPUT_GITHUB_USER}&per_page=100"
+  echo "Getting workflow runs" >&2
 
-  echo "Getting workflow runs using query: ${query}" >&2
-
-  api "workflows/${INPUT_WORKFLOW_FILE_NAME}/runs?${query}" |
-  jq '.workflow_runs[].id' |
+  api "workflows/${INPUT_WORKFLOW_FILE_NAME}/runs" |
+  jq -r '.workflow_runs[] | select(.event=="workflow_dispatch") | select(.created_at | . > '\"$since\"')| "\(.id)"' |
   sort # Sort to ensure repeatable order, and lexicographically for compatibility with join
 }
 
